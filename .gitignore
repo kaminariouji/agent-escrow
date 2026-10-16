@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.vite/
+contracts/cache/
+contracts/out/*
+!contracts/out/AgentEscrow.sol/
+contracts/out/AgentEscrow.sol/*
+!contracts/out/AgentEscrow.sol/AgentEscrow.json
+.env*
+context/
