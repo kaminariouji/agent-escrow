@@ -7,7 +7,7 @@ One agent (or service) locks USDC for a deliverable; the worker agent submits a 
 Built with **Arc Studio** for the [Arc Microgrants: Built with Arc Studio](https://dorahacks.io/hackathon/arc-microgrants-2) program.
 
 - **Arc Studio app**: https://studio.arc.io/app/430cf754-291a-4e76-a84b-603ffc815002
-- **Live web app**: _see Cloudflare Pages URL in the hackathon submission_
+- **Live web app**: https://agent-escrow-a53.pages.dev
 
 ## How it works
 
