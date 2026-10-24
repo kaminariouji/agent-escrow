@@ -79,12 +79,11 @@ contract AgentEscrowTest is Test {
     function test_HappyPath_Release_WorkerReceivesCorrectAmount() public {
         _createAndSubmitProof();
 
-        uint256 workerBefore = worker.balance;
-
         vm.prank(buyer);
         escrow.release(JOB_ID);
 
-        assertEq(worker.balance - workerBefore, AMOUNT);
+        // Pull payment: release credits pendingWithdrawals, it does not push USDC.
+        assertEq(escrow.pendingWithdrawals(worker), AMOUNT);
     }
 
     function test_HappyPath_Release_PaymentReleased_Event() public {
@@ -103,14 +102,12 @@ contract AgentEscrowTest is Test {
     function test_Release_FromFundedState_WithoutProof() public {
         _createJob();
 
-        uint256 workerBefore = worker.balance;
-
         vm.prank(buyer);
         escrow.release(JOB_ID);
 
         (, , , , , AgentEscrow.JobStatus status) = escrow.getJob(JOB_ID);
         assertEq(uint8(status), uint8(AgentEscrow.JobStatus.Released));
-        assertEq(worker.balance - workerBefore, AMOUNT);
+        assertEq(escrow.pendingWithdrawals(worker), AMOUNT);
     }
 
     // ============================================================
@@ -132,12 +129,11 @@ contract AgentEscrowTest is Test {
         uint64 deadline = _createJob();
         vm.warp(uint256(deadline) + 1);
 
-        uint256 buyerBefore = buyer.balance;
-
         vm.prank(buyer);
         escrow.refund(JOB_ID);
 
-        assertEq(buyer.balance - buyerBefore, AMOUNT);
+        // Pull payment: the refund credits the buyer, it does not push USDC.
+        assertEq(escrow.pendingWithdrawals(buyer), AMOUNT);
     }
 
     function test_Refund_AfterDeadline_ByBuyer_JobRefunded_Event() public {
@@ -158,15 +154,13 @@ contract AgentEscrowTest is Test {
         uint64 deadline = _createJob();
         vm.warp(uint256(deadline) + 1);
 
-        uint256 buyerBefore = buyer.balance;
-
         vm.prank(worker);
         escrow.refund(JOB_ID);
 
         (, , , , , AgentEscrow.JobStatus status) = escrow.getJob(JOB_ID);
         assertEq(uint8(status), uint8(AgentEscrow.JobStatus.Refunded));
         // Funds go to buyer regardless of who triggered the refund.
-        assertEq(buyer.balance - buyerBefore, AMOUNT);
+        assertEq(escrow.pendingWithdrawals(buyer), AMOUNT);
     }
 
     // ============================================================
@@ -223,8 +217,9 @@ contract AgentEscrowTest is Test {
         uint64 deadline = _createJob();
         vm.warp(uint256(deadline) + 1);
 
+        // The access check runs before the status check, so a stranger gets NotBuyer.
         vm.prank(stranger);
-        vm.expectRevert(AgentEscrow.InvalidStatus.selector);
+        vm.expectRevert(AgentEscrow.NotBuyer.selector);
         escrow.refund(JOB_ID);
     }
 
@@ -425,28 +420,26 @@ contract AgentEscrowTest is Test {
         uint64 deadline = _createAndSubmitProof();
         vm.warp(uint256(deadline) + 1);
 
-        uint256 buyerBefore = buyer.balance;
-
+        // Once proof is on-chain the job is no longer refundable: only the buyer
+        // can move it, and only by releasing. This is deliberate.
         vm.prank(buyer);
+        vm.expectRevert(AgentEscrow.InvalidStatus.selector);
         escrow.refund(JOB_ID);
 
         (, , , , , AgentEscrow.JobStatus status) = escrow.getJob(JOB_ID);
-        assertEq(uint8(status), uint8(AgentEscrow.JobStatus.Refunded));
-        assertEq(buyer.balance - buyerBefore, AMOUNT);
+        assertEq(uint8(status), uint8(AgentEscrow.JobStatus.ProofSubmitted));
     }
 
     function test_Refund_AfterProofSubmitted_ByWorker() public {
         uint64 deadline = _createAndSubmitProof();
         vm.warp(uint256(deadline) + 1);
 
-        uint256 buyerBefore = buyer.balance;
-
         vm.prank(worker);
+        vm.expectRevert(AgentEscrow.InvalidStatus.selector);
         escrow.refund(JOB_ID);
 
         (, , , , , AgentEscrow.JobStatus status) = escrow.getJob(JOB_ID);
-        assertEq(uint8(status), uint8(AgentEscrow.JobStatus.Refunded));
-        assertEq(buyer.balance - buyerBefore, AMOUNT);
+        assertEq(uint8(status), uint8(AgentEscrow.JobStatus.ProofSubmitted));
     }
 
     // ============================================================
@@ -456,39 +449,53 @@ contract AgentEscrowTest is Test {
     function test_Release_FromProofSubmitted_State() public {
         _createAndSubmitProof();
 
-        uint256 workerBefore = worker.balance;
-
         vm.prank(buyer);
         vm.expectEmit(true, true, false, true, address(escrow));
         emit AgentEscrow.PaymentReleased(JOB_ID, worker, AMOUNT);
         escrow.release(JOB_ID);
 
-        assertEq(worker.balance - workerBefore, AMOUNT);
+        assertEq(escrow.pendingWithdrawals(worker), AMOUNT);
         (, , , , , AgentEscrow.JobStatus status) = escrow.getJob(JOB_ID);
         assertEq(uint8(status), uint8(AgentEscrow.JobStatus.Released));
     }
 
     // ============================================================
-    // 10. Invariant: escrow balance zero after release/refund
+    // 10. Invariant: escrow holds the money until the payee withdraws
     // ============================================================
 
-    function test_Invariant_EscrowBalance_ZeroAfterRelease() public {
+    function test_Invariant_EscrowBalance_HeldUntilWithdrawAfterRelease() public {
         _createJob();
         assertEq(address(escrow).balance, AMOUNT);
 
         vm.prank(buyer);
         escrow.release(JOB_ID);
 
+        // Pull payment: the contract still holds the USDC, credited to the worker.
+        assertEq(address(escrow).balance, AMOUNT);
+        assertEq(escrow.pendingWithdrawals(worker), AMOUNT);
+
+        uint256 workerBefore = worker.balance;
+        vm.prank(worker);
+        escrow.withdraw();
+
         assertEq(address(escrow).balance, 0);
+        assertEq(escrow.pendingWithdrawals(worker), 0);
+        assertEq(worker.balance - workerBefore, AMOUNT);
     }
 
-    function test_Invariant_EscrowBalance_ZeroAfterRefund() public {
+    function test_Invariant_EscrowBalance_HeldUntilWithdrawAfterRefund() public {
         uint64 deadline = _createJob();
         assertEq(address(escrow).balance, AMOUNT);
 
         vm.warp(uint256(deadline) + 1);
         vm.prank(buyer);
         escrow.refund(JOB_ID);
+
+        assertEq(address(escrow).balance, AMOUNT);
+        assertEq(escrow.pendingWithdrawals(buyer), AMOUNT);
+
+        vm.prank(buyer);
+        escrow.withdraw();
 
         assertEq(address(escrow).balance, 0);
     }
