@@ -1,0 +1,72 @@
+{
+  "note": "Raw receipts read from the Arc mainnet JSON-RPC endpoint. No block explorer needed.",
+  "rpc": "https://rpc.mainnet.arc.io",
+  "chainId": 5042,
+  "generatedAt": "2026-10-27T19:49:55.139Z",
+  "contracts": {
+    "current": {
+      "address": "0xaa1ad37719722a5dce26439595f9ea2e532a56c2",
+      "codeBytes": 2584
+    },
+    "first": {
+      "address": "0x3F240c74C5bcF3504EC597d5aCb8CC1136BAc95b",
+      "codeBytes": 2584
+    }
+  },
+  "transactions": {
+    "deploy_mainnet": {
+      "hash": "0x862cbb4ddf8436cf88ede695ab5fd1cad4175a1e13a230118f83076fa8236660",
+      "status": "success",
+      "block": 27659672,
+      "from": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+      "to": null,
+      "gasUsed": 611633,
+      "logs": 0
+    },
+    "createJob": {
+      "hash": "0xaa5a459fdcb69b0e5e6fb83791f89d3d542eaccccf112ea70602994cbeadb543",
+      "status": "success",
+      "block": 27659717,
+      "from": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+      "to": "0xaa1ad37719722a5dce26439595f9ea2e532a56c2",
+      "gasUsed": 138213,
+      "logs": 2
+    },
+    "submitProof": {
+      "hash": "0xfa87e265353f888be625302cf4ae465a4f5e645847111b2b8d1427a70ba44c83",
+      "status": "success",
+      "block": 27659727,
+      "from": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+      "to": "0xaa1ad37719722a5dce26439595f9ea2e532a56c2",
+      "gasUsed": 53858,
+      "logs": 1
+    },
+    "release": {
+      "hash": "0x35139ddaa1f45ca44d4d528e63a422bae018a4f2a681f34183e7754eb923e260",
+      "status": "success",
+      "block": 27659729,
+      "from": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+      "to": "0xaa1ad37719722a5dce26439595f9ea2e532a56c2",
+      "gasUsed": 57947,
+      "logs": 1
+    },
+    "withdraw": {
+      "hash": "0x8571d017f2705c779b358e68cb9ddc197add4b73a745fb58cdbbfa60e8e2300b",
+      "status": "success",
+      "block": 27659731,
+      "from": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+      "to": "0xaa1ad37719722a5dce26439595f9ea2e532a56c2",
+      "gasUsed": 29959,
+      "logs": 2
+    },
+    "deploy_first": {
+      "hash": "0x2a25d4813230227190aec96f774a684bfddc3c9942595a58bb6a3aeeaf40641b",
+      "status": "success",
+      "block": 26296403,
+      "from": "0x8c062dc5d775b7d5efc168f75a875f392f53dcdf",
+      "to": null,
+      "gasUsed": 611633,
+      "logs": 0
+    }
+  }
+}
