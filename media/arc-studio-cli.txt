@@ -1,0 +1,19 @@
+Arc Studio CLI — evidence that this project was built in Arc Studio
+Recorded 2026-10-27, from the directory the project was created in.
+
+$ arc-studio apps
+430cf754-291a-4e76-a84b-603ffc815002  Agent Escrow Payment Ledger
+
+$ arc-studio deployments
+AgentEscrow  0x004ea6ef1fba77b71fc74e47e525ed7d92a0193b  Arc Testnet  https://explorer.testnet.arc.io/address/0x004ea6ef1fba77b71fc74e47e525ed7d92a0193b
+
+What this shows
+- The project id 430cf754-291a-4e76-a84b-603ffc815002 is the same id in the workspace URL
+  https://studio.arc.io/app/430cf754-291a-4e76-a84b-603ffc815002. The contracts, their tests and
+  the front end were written inside that workspace.
+- Studio's own deployment record is the Arc Testnet contract 0x004ea6ef1fba77b71fc74e47e525ed7d92a0193b.
+  Studio builds and tests, and it does not deploy to mainnet on your behalf, which is why the
+  mainnet contract in the README (0xaa1ad37719722a5dce26439595f9ea2e532a56c2) was deployed
+  separately with Foundry and the project's own key.
+- The mainnet transactions are listed in README.md and their raw receipts are in media/receipts.json,
+  read from https://rpc.mainnet.arc.io so they can be checked without a block explorer login.
